@@ -67,6 +67,8 @@
 |---|---|
 | [cron の下限 + アプリ側ゲート](cloudflare-cron-floor-plus-app-gating.md) | 固定 cron 上でユーザー設定可能なスケジュールを実現する: 最短周期で発火し、コード側で間引く。 |
 | [Worker 1つでフルスタック](single-worker-api-plus-static-spa.md) | API + SPA + cron を1つの Cloudflare Worker で配信するのが $0 フルスタック構成。 |
+| [Worker のカスタムドメイン設定](cloudflare-workers-custom-domain-setup.md) | ドメインの DNS ゾーンを自分の Cloudflare アカウントに置くだけで、Worker に本番ドメイン・エッジセキュリティ・CDN が一度に付く。 |
+| [ACA 上の KEDA キュースケーラー](keda-queue-scaler-aca-functions-requirements.md) | KEDA のキュースケール規則は、システム割り当て ID・専用のトリガー接続名・`__queueServiceUri` が揃って初めて自動生成される。 |
 
 ### 運用・信頼性
 
@@ -74,6 +76,9 @@
 |---|---|
 | [liveness とアプリの健全性は別物](healthz-edge-liveness-vs-in-app-error-monitoring.md) | プラットフォームのヘルスエンドポイントはホストの生存を示すだけで、アプリが動いている証明ではない — 両方の層を監視する。 |
 | [Discord webhook の 403](discord-webhook-403-python-urllib-user-agent.md) | Discord は Python urllib のデフォルト User-Agent をブロックする — 自前の値を設定する。 |
+| [AWS 内部の SDK 呼び出しを除外](aws-sdk-v1-audit-filter-aws-internal.md) | CloudTrail の SDK v1 呼び出しで userAgent が `aws-internal/` のものは自コードではなく AWS 側のサービス — 移行判断の前に除外する。 |
+| [TLS 検査プロキシ下でのビルド](docker-build-behind-tls-inspection-proxy-extra-cas.md) | TLS 検査プロキシは OS パッケージを入れるイメージビルドを壊す — 自組織のルート CA を信頼ストア用ディレクトリに置くまで直らない。 |
+| [マルチリポ環境での CLAUDE.md](claude-md-multi-repo-workspace-strategy.md) | Claude Code は上位ディレクトリの CLAUDE.md も読むため、ワークスペース直下のファイルでサブリポも賄える — ただしチームや CI に届くのはコミット済みのリポ別ファイルだけ。 |
 
 ### 設計・データパターン
 
@@ -84,6 +89,28 @@
 | [金額は整数の最小単位で](money-as-integer-minor-units.md) | 金額は整数の最小単位（minor units）で保存し、ISO 4217 の通貨カラムを別に持つ。 |
 | [抽出のカスケード](generic-product-extraction-cascade.md) | 商品データの抽出は、構造化ソースから推測ベースへと段階的にフォールバックする。 |
 | [タイマーのフラッシュは整数単位で](timer-flush-whole-seconds-carry-remainder.md) | フラッシュのカーソルは `now()` ではなく計上した単位分だけ進める — さもないとタイマーが遅れていく。 |
+| [ループしないキュー委譲](queue-delegation-loop-prevention-pattern.md) | 委譲の判断は純粋なドメインコードで行い、メッセージはトリガー層からそのまま転送し、マーカーフィールドでゲートしてループを防ぐ。 |
+
+### バックエンド・JVM
+
+| ノート | 洞察 |
+|---|---|
+| [セッション削除のデッドロック](spring-session-cleanup-deadlock-shedlock.md) | 既定のセッション削除 `DELETE` に `ORDER BY` がなく、2インスタンスが逆順で行ロックを取りデッドロックする — 順序付け + ShedLock で解消。 |
+| [PDF ダウンロードのヒープ OOM](pdfbox-download-unbounded-heap-oom.md) | ファイル全体を PDFBox に読み込み `PDDocument` を閉じないと、サイズの3〜4倍をヒープに保持し並行時に OOM する — ストリーミングにする。 |
+
+### データベース
+
+| ノート | 洞察 |
+|---|---|
+| [`caching_sha2_password` の経路](mysql-caching-sha2-password-connection-flow.md) | MySQL が遅い RSA 経路（と Python の `cryptography`）を要するのは認証キャッシュが冷えているときだけ — サーバー再起動やフェイルオーバー後。 |
+| [ブルー/グリーン切替の手順書](rds-mysql-blue-green-switchover.md) | DB 接続をゼロまで落として切り替え、トラフィックを戻す前に green の書き込み可否を確認する — ロールバックは遅いポイントインタイム復元。 |
+
+### 認証・セキュリティ
+
+| ノート | 洞察 |
+|---|---|
+| [リンクとセッションで RSA 鍵ペアを2組](jwt-two-rsa-keypairs-link-and-session.md) | 招待リンクのトークンとセッショントークンを別々の RSA 鍵ペアで署名し、片方が漏れてももう片方を偽造できないようにする。 |
+| [コントローラ単位で検証するセッション JWT](spa-session-jwt-verified-per-controller.md) | 認証フィルターがない場合、各コントローラが自前でセッショントークンヘッダーを検証する必要がある — 1つ忘れると未認証になる。 |
 
 ### フロントエンド
 

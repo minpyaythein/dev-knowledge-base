@@ -67,6 +67,8 @@ One-line TL;DR.
 |---|---|
 | [Cron floor + app gating](cloudflare-cron-floor-plus-app-gating.md) | User-configurable schedules on a fixed cron: fire at the floor frequency, gate in code. |
 | [One Worker, full stack](single-worker-api-plus-static-spa.md) | A single Cloudflare Worker serving API + SPA + cron is the $0 full-stack shape. |
+| [Worker custom domain setup](cloudflare-workers-custom-domain-setup.md) | Put the domain's DNS zone in your own Cloudflare account and a Worker gets a real domain, edge security, and CDN in one move. |
+| [KEDA queue scaler on ACA](keda-queue-scaler-aca-functions-requirements.md) | KEDA queue scale rules only auto-generate with a system-assigned identity, a dedicated trigger connection, and a `__queueServiceUri`. |
 
 ### Ops & reliability
 
@@ -74,6 +76,9 @@ One-line TL;DR.
 |---|---|
 | [Liveness vs app health](healthz-edge-liveness-vs-in-app-error-monitoring.md) | A platform health endpoint proves the host is up, not that the app works — monitor both layers. |
 | [Discord webhook 403](discord-webhook-403-python-urllib-user-agent.md) | Discord blocks Python's default urllib User-Agent — set your own. |
+| [Filter AWS-internal SDK calls](aws-sdk-v1-audit-filter-aws-internal.md) | CloudTrail SDK-v1 calls with an `aws-internal/` userAgent are AWS's own services, not your code — filter them before planning a migration. |
+| [Build behind a TLS proxy](docker-build-behind-tls-inspection-proxy-extra-cas.md) | A TLS-inspecting proxy breaks image builds that install OS packages until you drop your org's root CA into the trust-store dir. |
+| [CLAUDE.md in a multi-repo workspace](claude-md-multi-repo-workspace-strategy.md) | Claude Code loads CLAUDE.md from ancestor dirs, so a workspace-root file covers subrepos — but only committed per-repo files reach teammates and CI. |
 
 ### Design & data patterns
 
@@ -84,6 +89,28 @@ One-line TL;DR.
 | [Money as integer minor units](money-as-integer-minor-units.md) | Store money as integer minor units plus a separate ISO 4217 currency column. |
 | [Extraction cascade](generic-product-extraction-cascade.md) | Extract product data by cascading from structured sources down to guessed ones. |
 | [Flush timers by whole units](timer-flush-whole-seconds-carry-remainder.md) | Advance the flush cursor by units counted, not to `now()` — or the timer drifts slow. |
+| [Queue delegation without loops](queue-delegation-loop-prevention-pattern.md) | Decide delegation in pure domain code, forward the message verbatim, and gate on a marker field so queue functions can't loop. |
+
+### Backend / JVM
+
+| Note | Insight |
+|---|---|
+| [Session cleanup deadlock](spring-session-cleanup-deadlock-shedlock.md) | The default session-cleanup `DELETE` has no `ORDER BY`; two instances lock rows in opposite order and deadlock — fix with ordering + ShedLock. |
+| [PDF download heap OOM](pdfbox-download-unbounded-heap-oom.md) | Buffering a whole file through PDFBox without closing `PDDocument` holds 3–4× its size in heap and OOMs under concurrency — stream instead. |
+
+### Databases
+
+| Note | Insight |
+|---|---|
+| [`caching_sha2_password` paths](mysql-caching-sha2-password-connection-flow.md) | MySQL needs the slow RSA path (and Python `cryptography`) only on a cold auth cache — after a server restart or failover. |
+| [Blue/green switchover runbook](rds-mysql-blue-green-switchover.md) | Drain to zero DB connections, switch, then verify green is writable before reopening; rollback is a slow point-in-time restore. |
+
+### Auth & security
+
+| Note | Insight |
+|---|---|
+| [Two RSA key pairs for link + session](jwt-two-rsa-keypairs-link-and-session.md) | Sign the invite-link token and the session token with two separate RSA key pairs, so leaking one can't forge the other. |
+| [Session JWT verified per controller](spa-session-jwt-verified-per-controller.md) | With no auth filter, every controller must verify the session-token header itself — miss one and it's unauthenticated. |
 
 ### Frontend
 
